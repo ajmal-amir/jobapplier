@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── LOAD ALL SETTINGS ON PAGE OPEN ───────────────────────────────────────
-  // Fill in all form fields with previously saved values
-  await loadAllSettings();
+  // Fill in all form fields with previously saved values.
+  // NOTE: called AFTER all variable declarations so closure references are live.
 
   // ── SLIDER LIVE VALUE DISPLAY ─────────────────────────────────────────────
   // The match threshold slider should update its displayed value as it moves
@@ -202,6 +202,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadApplicationLog(); // Reload the (now empty) log
     });
   }
+
+  // Load saved settings now that all variables and listeners are initialised.
+  await loadAllSettings();
 
   // ════════════════════════════════════════════════════════════════════════════
   // HELPER FUNCTIONS
