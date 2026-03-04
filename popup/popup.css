@@ -1,0 +1,379 @@
+/*
+  FILE: popup/popup.css
+  PURPOSE: Styles for the extension popup window.
+
+  POPUP CSS NOTES:
+  - Chrome popups default to a very small width — we set a fixed 380px width
+  - Popups don't scroll by default — keep content compact
+  - Use CSS variables (--color-name) for consistent theming
+  - Dark mode media query respects user's OS preference
+*/
+
+/* ── CSS CUSTOM PROPERTIES (Variables) ─────────────────────────────────────
+   Define all colors and sizes in one place. Change a variable here and
+   it updates everywhere it's used. Much better than hardcoded hex values. */
+:root {
+  --color-primary:     #0a66c2;   /* LinkedIn blue — primary brand color */
+  --color-success:     #16a34a;   /* Green — for "Applied" status */
+  --color-warning:     #d97706;   /* Amber — for "Paused" and warnings */
+  --color-danger:      #dc2626;   /* Red — for "Failed" and Stop button */
+  --color-bg:          #ffffff;   /* Page background */
+  --color-surface:     #f8fafc;   /* Cards and panels */
+  --color-border:      #e2e8f0;   /* Borders */
+  --color-text:        #1e293b;   /* Primary text */
+  --color-text-muted:  #64748b;   /* Secondary/muted text */
+  --radius:            8px;       /* Default border radius */
+  --shadow:            0 1px 3px rgba(0,0,0,0.12);
+}
+
+/* ── RESET & BASE ──────────────────────────────────────────────────────────
+   Browser default styles vary. We normalize them first. */
+*, *::before, *::after {
+  box-sizing: border-box; /* padding doesn't add to element width */
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* -apple-system uses San Francisco on Mac, system font on other platforms */
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  width: 380px;           /* Fixed popup width */
+  min-height: 500px;
+  overflow-x: hidden;     /* No horizontal scroll */
+}
+
+/* ── HEADER ────────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Push settings button to the right */
+  padding: 12px 16px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between logo and text */
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* Icon-only button (settings gear) */
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.btn-icon:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ── STATUS BAR ─────────────────────────────────────────────────────────────── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Animated status indicator dot */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%; /* Makes it a circle */
+  flex-shrink: 0;
+}
+
+/* Different colors for different states */
+.status-dot.running {
+  background: var(--color-success);
+  /* Pulsing animation to show it's actively working */
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.status-dot.paused  { background: var(--color-warning); }
+.status-dot.stopped { background: #94a3b8; }
+
+/* Pulse keyframe animation: grows slightly then returns */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.3); opacity: 0.7; }
+}
+
+.status-text {
+  font-weight: 600;
+  flex: 1; /* Takes up remaining space, pushing counter to the right */
+}
+
+.daily-counter {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-border);
+  padding: 2px 8px;
+  border-radius: 12px; /* Pill shape */
+}
+
+/* ── WARNING BANNER ─────────────────────────────────────────────────────────── */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fef9c3; /* Light yellow */
+  border-bottom: 1px solid #fde047;
+  color: #713f12;
+  font-size: 12px;
+}
+
+/* Helper class: .hidden hides elements without removing them from the DOM.
+   JavaScript toggles this class to show/hide the banner. */
+.hidden { display: none !important; }
+
+/* ── STATISTICS GRID ────────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+  gap: 1px;              /* Gap creates the grid lines effect */
+  background: var(--color-border); /* Border color shows through the gaps */
+  margin: 0;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column; /* Stack number above label */
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  background: var(--color-bg);
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  text-transform: uppercase; /* ALL CAPS for labels */
+  letter-spacing: 0.05em;
+}
+
+/* ── CONTROL BUTTONS ────────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Base button style */
+.btn {
+  flex: 1; /* All buttons share equal width */
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s; /* Smooth hover effects */
+}
+
+.btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+
+/* Disabled state — grayed out and no cursor change */
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-start { background: var(--color-success); color: white; }
+.btn-pause { background: var(--color-warning); color: white; }
+.btn-stop  { background: var(--color-danger);  color: white; }
+
+/* ── PLATFORM TOGGLES ───────────────────────────────────────────────────────── */
+.platform-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none; /* Prevents text selection when double-clicking */
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--color-primary); /* Colors the checkbox itself */
+}
+
+.platform-icon { font-size: 14px; }
+
+/* ── ACTIVITY LOG ───────────────────────────────────────────────────────────── */
+.log-section {
+  padding: 0;
+  flex: 1;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Link-styled button (no background) */
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.activity-log {
+  max-height: 160px;      /* Fixed height with scroll */
+  overflow-y: auto;       /* Scroll vertically when content overflows */
+  padding: 4px 0;
+}
+
+/* Scrollbar styling (WebKit browsers: Chrome, Edge) */
+.activity-log::-webkit-scrollbar { width: 4px; }
+.activity-log::-webkit-scrollbar-track { background: transparent; }
+.activity-log::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+.log-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  padding: 20px 16px;
+  font-style: italic;
+}
+
+/* Individual log entry */
+.log-entry {
+  display: grid;
+  /* 3-column grid: status icon | job info | match score */
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 12px;
+}
+
+.log-entry:last-child { border-bottom: none; }
+
+/* Left border color indicates status */
+.log-entry.status-applied { border-left: 3px solid var(--color-success); }
+.log-entry.status-skipped { border-left: 3px solid var(--color-text-muted); }
+.log-entry.status-failed  { border-left: 3px solid var(--color-danger); }
+
+.log-entry-icon  { font-size: 14px; text-align: center; }
+.log-entry-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* text-overflow: ellipsis adds "..." when text is too long for the container */
+.log-entry-company { color: var(--color-text-muted); font-size: 11px; }
+.log-entry-score {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* ── NAVIGATION ROW ─────────────────────────────────────────────────────────── */
+.nav-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-nav {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-nav:hover {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+
+/* ── FOOTER ─────────────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px 10px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ── DARK MODE ──────────────────────────────────────────────────────────────── */
+/* Automatically applies when the user has dark mode enabled in their OS */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg:         #1e293b;
+    --color-surface:    #0f172a;
+    --color-border:     #334155;
+    --color-text:       #e2e8f0;
+    --color-text-muted: #94a3b8;
+  }
+  .warning-banner { background: #451a03; border-color: #92400e; color: #fed7aa; }
+  .btn-nav { background: var(--color-surface); color: var(--color-text); }
+}

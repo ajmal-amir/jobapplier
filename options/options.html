@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<!--
+  FILE: options/options.html
+  PURPOSE: The full settings page for the extension. Opens in a browser tab
+           (not a small popup) so there's room for detailed configuration.
+
+  SECTIONS:
+  1. API Settings   — OpenAI API key, EmailJS config
+  2. My Profile     — Personal information for form filling
+  3. My Resume      — Paste resume text here
+  4. Job Preferences — What jobs to look for
+  5. App Settings   — Automation behavior (delays, limits, etc.)
+  6. Application Log — Full history of applied jobs (with export)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Job Applicant — Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+
+  <!-- ── PAGE HEADER ────────────────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-content">
+      <img src="../icons/icon48.png" alt="Logo" class="header-logo">
+      <div>
+        <h1>AI Job Applicant — Settings</h1>
+        <p>Configure your profile, resume, and automation preferences</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── SAVE NOTIFICATION BANNER ───────────────────────────────────────── -->
+  <!-- Appears briefly after saving settings to confirm success -->
+  <div id="saveBanner" class="save-banner hidden">
+    ✅ Settings saved successfully!
+  </div>
+
+  <div class="page-layout">
+
+    <!-- ── LEFT SIDEBAR: Tab Navigation ──────────────────────────────────── -->
+    <nav class="sidebar">
+      <!-- Each button switches the visible tab panel -->
+      <!-- data-tab attribute tells JS which panel to show -->
+      <button class="tab-btn active" data-tab="api">
+        🔑 API Settings
+      </button>
+      <button class="tab-btn" data-tab="profile">
+        👤 My Profile
+      </button>
+      <button class="tab-btn" data-tab="resume">
+        📄 My Resume
+      </button>
+      <button class="tab-btn" data-tab="jobprefs">
+        🎯 Job Preferences
+      </button>
+      <button class="tab-btn" data-tab="appsettings">
+        ⚙️ App Settings
+      </button>
+      <button class="tab-btn" data-tab="log">
+        📋 Application Log
+      </button>
+    </nav>
+
+    <!-- ── MAIN CONTENT AREA ──────────────────────────────────────────────── -->
+    <main class="main-content">
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 1: API SETTINGS                                            -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-api" class="tab-panel active">
+        <h2 class="section-title">🔑 API Settings</h2>
+
+        <!-- OpenAI API Key -->
+        <div class="card">
+          <h3 class="card-title">OpenAI API Key</h3>
+          <p class="card-desc">
+            Required for job matching and form analysis. Get your key at
+            <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>.
+            Stored encrypted on your device — never sent anywhere except OpenAI.
+          </p>
+          <div class="form-group">
+            <label for="openaiKey" class="form-label">API Key</label>
+            <div class="input-with-btn">
+              <!-- type="password" hides the characters — protects your key from shoulder surfers -->
+              <input type="password" id="openaiKey" class="form-input"
+                     placeholder="sk-proj-..." autocomplete="off">
+              <!-- Toggle visibility button -->
+              <button id="toggleKeyVisibility" class="btn-inline" title="Show/hide key">👁️</button>
+            </div>
+          </div>
+          <button id="testApiKey" class="btn btn-secondary">Test API Key</button>
+          <span id="apiKeyStatus" class="status-message"></span>
+        </div>
+
+        <!-- EmailJS Configuration -->
+        <div class="card">
+          <h3 class="card-title">📧 Email Notifications (EmailJS)</h3>
+          <p class="card-desc">
+            Receive daily email reports of all job applications.
+            <strong>Free setup:</strong> Go to
+            <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> →
+            Create an account → Add Email Service → Create Template → Copy IDs below.
+          </p>
+
+          <!-- Step-by-step guide collapsed in a details element -->
+          <details class="setup-guide">
+            <summary>📖 EmailJS Setup Guide (click to expand)</summary>
+            <ol class="setup-steps">
+              <li>Go to <strong>emailjs.com</strong> and sign up for a free account</li>
+              <li>Click <strong>Email Services</strong> → Add a service (choose Gmail)</li>
+              <li>Copy your <strong>Service ID</strong> (looks like: service_abc123)</li>
+              <li>Click <strong>Email Templates</strong> → Create a new template</li>
+              <li>In the template, add these variables: <code>{{subject}}</code>, <code>{{html_body}}</code></li>
+              <li>Copy your <strong>Template ID</strong> (looks like: template_xyz789)</li>
+              <li>Go to <strong>Account → API Keys</strong> → copy your <strong>Public Key</strong></li>
+              <li>Paste all three values below and click Save</li>
+            </ol>
+          </details>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emailServiceId" class="form-label">Service ID</label>
+              <input type="text" id="emailServiceId" class="form-input" placeholder="service_abc123">
+            </div>
+            <div class="form-group">
+              <label for="emailTemplateId" class="form-label">Template ID</label>
+              <input type="text" id="emailTemplateId" class="form-input" placeholder="template_xyz789">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emailPublicKey" class="form-label">Public Key</label>
+              <input type="text" id="emailPublicKey" class="form-input" placeholder="user_...">
+            </div>
+            <div class="form-group">
+              <label for="emailToAddress" class="form-label">Your Email Address</label>
+              <input type="email" id="emailToAddress" class="form-input" placeholder="you@example.com">
+            </div>
+          </div>
+
+          <!-- Checkbox: send immediate notification per application -->
+          <label class="checkbox-label">
+            <input type="checkbox" id="chkImmediateEmail">
+            Send an email for <em>each</em> job application (in addition to daily report)
+          </label>
+
+          <div class="btn-row">
+            <button id="testEmail" class="btn btn-secondary">Send Test Email</button>
+            <span id="emailStatus" class="status-message"></span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary save-btn" data-tab="api">💾 Save API Settings</button>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 2: MY PROFILE                                              -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-profile" class="tab-panel">
+        <h2 class="section-title">👤 My Profile</h2>
+        <p class="section-desc">
+          This information will be used to automatically fill out job application forms.
+          Fill in all fields accurately — the AI uses this to answer application questions.
+        </p>
+
+        <!-- Personal Information -->
+        <div class="card">
+          <h3 class="card-title">Personal Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName" class="form-label">First Name *</label>
+              <input type="text" id="firstName" class="form-input" placeholder="John">
+            </div>
+            <div class="form-group">
+              <label for="lastName" class="form-label">Last Name *</label>
+              <input type="text" id="lastName" class="form-input" placeholder="Doe">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address *</label>
+              <input type="email" id="email" class="form-input" placeholder="john.doe@email.com">
+            </div>
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone Number *</label>
+              <input type="tel" id="phone" class="form-input" placeholder="(704) 555-0123">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="address" class="form-label">Street Address</label>
+              <input type="text" id="address" class="form-input" placeholder="123 Main St">
+            </div>
+            <div class="form-group">
+              <label for="city" class="form-label">City</label>
+              <input type="text" id="city" class="form-input" value="Charlotte">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="state" class="form-label">State</label>
+              <input type="text" id="state" class="form-input" value="NC" maxlength="2">
+            </div>
+            <div class="form-group">
+              <label for="zipCode" class="form-label">ZIP Code</label>
+              <input type="text" id="zipCode" class="form-input" placeholder="28202" maxlength="10">
+            </div>
+          </div>
+        </div>
+
+        <!-- Online Presence -->
+        <div class="card">
+          <h3 class="card-title">Online Profiles</h3>
+          <div class="form-group">
+            <label for="linkedin" class="form-label">LinkedIn URL</label>
+            <input type="url" id="linkedin" class="form-input"
+                   placeholder="https://linkedin.com/in/your-name">
+          </div>
+          <div class="form-group">
+            <label for="github" class="form-label">GitHub URL</label>
+            <input type="url" id="github" class="form-input"
+                   placeholder="https://github.com/your-username">
+          </div>
+          <div class="form-group">
+            <label for="portfolio" class="form-label">Portfolio Website</label>
+            <input type="url" id="portfolio" class="form-input"
+                   placeholder="https://yourportfolio.com">
+          </div>
+        </div>
+
+        <!-- Work Authorization — Pre-filled for US Citizens -->
+        <div class="card">
+          <h3 class="card-title">Work Authorization</h3>
+          <p class="card-desc">
+            These answers will be used automatically for EEOC and work authorization questions.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Citizenship Status</label>
+            <!-- select element creates a dropdown -->
+            <select id="citizenStatus" class="form-input">
+              <option value="US Citizen">US Citizen ✓</option>
+              <option value="Permanent Resident">Permanent Resident (Green Card)</option>
+              <option value="Work Visa">Work Visa (H1B, L1, etc.)</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="toggle-label">
+              <span>Authorized to work in the US?</span>
+              <!-- Toggle switch implemented with CSS -->
+              <label class="toggle-switch">
+                <input type="checkbox" id="usWorkAuth" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+
+            <label class="toggle-label">
+              <span>Require visa sponsorship?</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="requireSponsorship">
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Veteran Status (EEOC)</label>
+            <select id="veteranStatus" class="form-input">
+              <option value="I am not a protected veteran">I am not a protected veteran ✓</option>
+              <option value="I am a protected veteran">I am a protected veteran</option>
+              <option value="I don't wish to answer">I don't wish to answer</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Disability Status (EEOC)</label>
+            <select id="disabilityStatus" class="form-input">
+              <option value="No, I don't wish to answer">No, I don't wish to answer ✓</option>
+              <option value="Yes, I have a disability">Yes, I have a disability</option>
+              <option value="No, I don't have a disability">No, I don't have a disability</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary save-btn" data-tab="profile">💾 Save Profile</button>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 3: MY RESUME                                               -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-resume" class="tab-panel">
+        <h2 class="section-title">📄 My Resume</h2>
+
+        <div class="card">
+          <h3 class="card-title">Paste Your Resume Here</h3>
+          <p class="card-desc">
+            Paste the plain text version of your resume. The AI uses this to:
+            <ul>
+              <li>Score how well each job matches your experience</li>
+              <li>Fill in work history and skills fields on applications</li>
+              <li>Generate personalized cover letters</li>
+            </ul>
+            <strong>How to get plain text from your resume:</strong>
+            Open your Word/PDF resume → Select All → Copy → Paste below.
+          </p>
+
+          <!-- Large text area for pasting resume -->
+          <div class="form-group">
+            <label for="resumeText" class="form-label">
+              Resume Text
+              <!-- Character counter shows how many characters have been pasted -->
+              <span id="resumeCharCount" class="char-count">0 characters</span>
+            </label>
+            <textarea id="resumeText" class="form-textarea" rows="20"
+                      placeholder="Paste your resume text here...
+
+Example:
+John Doe
+Software Engineer | Charlotte, NC | john@email.com
+
+EXPERIENCE
+Senior Software Engineer — TechCorp (2021-Present)
+• Built microservices using Python and FastAPI
+• Led team of 4 engineers on ML pipeline project
+..."></textarea>
+          </div>
+
+          <!-- Resume quality tips -->
+          <div id="resumeQuality" class="quality-indicator hidden">
+            <span id="qualityIcon"></span>
+            <span id="qualityText"></span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary save-btn" data-tab="resume">💾 Save Resume</button>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 4: JOB PREFERENCES                                         -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-jobprefs" class="tab-panel">
+        <h2 class="section-title">🎯 Job Preferences</h2>
+
+        <div class="card">
+          <h3 class="card-title">What Jobs to Look For</h3>
+
+          <div class="form-group">
+            <label class="form-label">Job Titles (one per line)</label>
+            <textarea id="jobTitles" class="form-textarea" rows="5"
+                      placeholder="Software Engineer&#10;AI Engineer&#10;Machine Learning Engineer&#10;Full Stack Engineer&#10;Backend Engineer"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="location" class="form-label">Location</label>
+              <input type="text" id="location" class="form-input" value="Charlotte, NC">
+            </div>
+            <div class="form-group">
+              <label for="minSalary" class="form-label">Minimum Salary (0 = no filter)</label>
+              <input type="number" id="minSalary" class="form-input" placeholder="0" min="0" step="5000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Work Model</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="remote" value="remote" checked> Remote
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="remote" value="hybrid" checked> Hybrid
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="remote" value="on-site" checked> On-site
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Experience Level</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="expLevel" value="entry-level"> Entry Level (0-2 years)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="expLevel" value="mid-level" checked> Mid Level (3-5 years)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="expLevel" value="senior" checked> Senior (5+ years)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="expLevel" value="lead"> Lead / Principal
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="matchThreshold" class="form-label">
+              Minimum Match Score to Apply:
+              <!-- Output element displays the slider's current value -->
+              <output id="matchThresholdValue">65</output>%
+            </label>
+            <!-- range input creates a slider -->
+            <input type="range" id="matchThreshold" class="form-range"
+                   min="40" max="95" value="65" step="5">
+            <div class="range-labels">
+              <span>40% (apply to almost everything)</span>
+              <span>95% (very selective)</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary save-btn" data-tab="jobprefs">💾 Save Preferences</button>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 5: APP SETTINGS                                            -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-appsettings" class="tab-panel">
+        <h2 class="section-title">⚙️ Automation Settings</h2>
+
+        <div class="card">
+          <h3 class="card-title">Rate Limiting & Safety</h3>
+          <p class="card-desc">
+            ⚠️ <strong>Important:</strong> Applying too fast can get your account flagged.
+            We recommend keeping delays high and daily limits conservative.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="maxDailyApps" class="form-label">Max Applications Per Day</label>
+              <input type="number" id="maxDailyApps" class="form-input"
+                     value="30" min="1" max="100">
+            </div>
+            <div class="form-group">
+              <label for="delayBetweenApps" class="form-label">Delay Between Applications (seconds)</label>
+              <input type="number" id="delayBetweenApps" class="form-input"
+                     value="8" min="3" max="60">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Automation Behavior</h3>
+
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Auto-Submit Applications</span>
+              <p class="toggle-desc">
+                ⚠️ If OFF (recommended), the extension fills forms but waits for YOU to click Submit.
+                If ON, it submits automatically — only enable once you've verified it works correctly.
+              </p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="autoSubmit">
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Enable LinkedIn</span>
+              <p class="toggle-desc">Scan LinkedIn job listings and apply via Easy Apply</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="enableLinkedIn" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Enable Indeed</span>
+              <p class="toggle-desc">Scan Indeed job listings and apply via Indeed Apply</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="enableIndeed" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Apply to External Forms</span>
+              <p class="toggle-desc">Fill out forms on company websites (Greenhouse, Lever, Workday, etc.)</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="enableExternalForms" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Skip Already Applied Jobs</span>
+              <p class="toggle-desc">Tracks applied job URLs and skips them on future scans</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="skipApplied" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Email Reports</h3>
+          <label class="toggle-label">
+            <div>
+              <span class="toggle-title">Send Daily Email Report</span>
+              <p class="toggle-desc">Emails a summary of the day's applications at the time below</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="sendDailyEmail" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </label>
+          <div class="form-group">
+            <label for="emailTime" class="form-label">Daily Report Time</label>
+            <input type="time" id="emailTime" class="form-input" value="18:00">
+          </div>
+        </div>
+
+        <button class="btn btn-primary save-btn" data-tab="appsettings">💾 Save Settings</button>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 6: APPLICATION LOG                                         -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <section id="tab-log" class="tab-panel">
+        <h2 class="section-title">📋 Application Log</h2>
+
+        <!-- Log action bar -->
+        <div class="log-actions">
+          <div class="log-filters">
+            <select id="logFilter" class="form-input form-input-sm">
+              <option value="all">All Applications</option>
+              <option value="applied">Applied Only</option>
+              <option value="skipped">Skipped Only</option>
+              <option value="failed">Failed Only</option>
+            </select>
+            <select id="logSource" class="form-input form-input-sm">
+              <option value="all">All Sources</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Indeed">Indeed</option>
+            </select>
+          </div>
+          <div class="log-action-btns">
+            <button id="exportCsv" class="btn btn-secondary">⬇️ Export CSV</button>
+            <button id="clearLog" class="btn btn-danger">🗑️ Clear Log</button>
+          </div>
+        </div>
+
+        <!-- Stats bar above the log table -->
+        <div id="logStats" class="log-stats">Loading...</div>
+
+        <!-- Log table — populated dynamically by options.js -->
+        <div class="table-wrapper">
+          <table id="logTable" class="log-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Location</th>
+                <th>Source</th>
+                <th>Match</th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <!-- Rows inserted dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main><!-- end .main-content -->
+  </div><!-- end .page-layout -->
+
+  <!-- External JS — load last so all HTML elements exist when script runs -->
+  <script src="options.js"></script>
+
+</body>
+</html>

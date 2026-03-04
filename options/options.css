@@ -1,0 +1,490 @@
+/*
+  FILE: options/options.css
+  PURPOSE: Styles for the full-page options/settings view.
+           This is a wider, richer layout compared to the popup.
+*/
+
+/* ── CSS Variables ────────────────────────────────────────────────────────── */
+:root {
+  --primary:       #0a66c2;
+  --primary-light: #eff6ff;
+  --success:       #16a34a;
+  --warning:       #d97706;
+  --danger:        #dc2626;
+  --bg:            #f8fafc;
+  --surface:       #ffffff;
+  --border:        #e2e8f0;
+  --text:          #1e293b;
+  --text-muted:    #64748b;
+  --radius:        10px;
+  --shadow:        0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
+.page-header {
+  background: var(--primary);
+  color: white;
+  padding: 20px 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.header-logo { width: 48px; height: 48px; border-radius: 10px; }
+.header-content h1 { font-size: 20px; font-weight: 700; }
+.header-content p  { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+
+/* ── SAVE BANNER ──────────────────────────────────────────────────────────── */
+.save-banner {
+  background: #dcfce7;
+  color: #15803d;
+  text-align: center;
+  padding: 10px;
+  font-weight: 600;
+  border-bottom: 1px solid #86efac;
+  position: sticky; /* Stays visible when user scrolls */
+  top: 0;
+  z-index: 100;
+}
+.hidden { display: none !important; }
+
+/* ── TWO-COLUMN LAYOUT ────────────────────────────────────────────────────── */
+.page-layout {
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 40px;
+  gap: 24px;
+}
+
+/* ── SIDEBAR (Tab Navigation) ─────────────────────────────────────────────── */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0; /* Don't shrink the sidebar */
+  display: flex;
+  flex-direction: column; /* Stack buttons vertically */
+  gap: 4px;
+  position: sticky; /* Sidebar stays in view while content scrolls */
+  top: 24px;
+  height: fit-content; /* Only as tall as its content */
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Active tab has a stronger highlight */
+.tab-btn.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+  /* Left border accent to indicate active tab */
+  border-left: 3px solid var(--primary);
+  padding-left: 11px; /* Compensate for border width */
+}
+
+/* ── MAIN CONTENT AREA ──────────────────────────────────────────────────── */
+.main-content {
+  flex: 1; /* Take all remaining space */
+  min-width: 0; /* Allows flex child to shrink below content size */
+}
+
+/* Tab panels — only one is visible at a time */
+.tab-panel { display: none; } /* Hide all panels by default */
+.tab-panel.active { display: block; } /* Show the active panel */
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.section-desc ul { margin-left: 20px; margin-top: 8px; }
+.section-desc li { margin-bottom: 4px; }
+
+/* ── CARDS ──────────────────────────────────────────────────────────────── */
+/* Cards group related form fields together with a white background */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.card-desc {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+  font-size: 13px;
+}
+.card-desc a { color: var(--primary); }
+
+/* ── FORM ELEMENTS ──────────────────────────────────────────────────────── */
+/* Two-column row for related fields side by side */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between; /* Pushes char-count to the right */
+  align-items: center;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+/* Focus state: blue border + subtle glow — guides the user's eye */
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+}
+
+.form-input-sm { width: auto; } /* Smaller input for select filters */
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Courier New', monospace; /* Monospace for resume text */
+  resize: vertical; /* Allow vertical resizing only */
+  line-height: 1.6;
+}
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+}
+
+/* ── TOGGLE SWITCHES ────────────────────────────────────────────────────── */
+/* Custom on/off toggle built with CSS — much more attractive than a checkbox */
+.toggle-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.toggle-label:last-child { border-bottom: none; }
+
+.toggle-title { font-weight: 600; }
+.toggle-desc  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Outer container — the "track" */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+/* Hide the actual checkbox (we'll use CSS to style it) */
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+/* The visible slider track */
+.toggle-slider {
+  position: absolute;
+  inset: 0; /* shorthand for top:0; right:0; bottom:0; left:0 */
+  background: #cbd5e1; /* Gray when off */
+  border-radius: 24px; /* Fully rounded */
+  transition: background 0.2s;
+}
+
+/* The circle "knob" on the slider */
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s; /* Smooth slide animation */
+}
+
+/* When checkbox is checked: change track to green, slide knob right */
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--primary);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px); /* Slide right */
+}
+
+/* ── RANGE SLIDER ────────────────────────────────────────────────────────── */
+.form-range {
+  width: 100%;
+  margin: 8px 0 4px;
+  accent-color: var(--primary);
+}
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── BUTTONS ──────────────────────────────────────────────────────────────── */
+.btn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover   { opacity: 0.9; }
+.btn:active  { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary   { background: var(--primary); color: white; }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-danger    { background: var(--danger);  color: white; }
+
+.save-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.input-with-btn {
+  display: flex;
+  gap: 8px;
+}
+.input-with-btn .form-input { flex: 1; }
+.btn-inline {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* ── STATUS MESSAGES ─────────────────────────────────────────────────────── */
+.status-message {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+.status-message.success { color: var(--success); }
+.status-message.error   { color: var(--danger);  }
+
+/* ── SETUP GUIDE (collapsible) ───────────────────────────────────────────── */
+.setup-guide {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.setup-guide summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+.setup-steps { margin: 12px 0 0 20px; line-height: 2; }
+.setup-steps code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* ── CHECKBOXES ──────────────────────────────────────────────────────────── */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── RESUME QUALITY INDICATOR ─────────────────────────────────────────────── */
+.quality-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+}
+.char-count { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+
+/* ── LOG TABLE ───────────────────────────────────────────────────────────── */
+.log-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.log-filters { display: flex; gap: 8px; }
+.log-action-btns { display: flex; gap: 8px; }
+
+.log-stats {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.table-wrapper {
+  overflow-x: auto; /* Horizontal scroll if table is wider than viewport */
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse; /* Merge borders between cells */
+  font-size: 13px;
+}
+
+.log-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.log-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-table tr:last-child td { border-bottom: none; }
+.log-table tr:hover td      { background: var(--bg); } /* Row hover highlight */
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-applied  { background: #dcfce7; color: #15803d; }
+.badge-skipped  { background: #f1f5f9; color: #475569; }
+.badge-failed   { background: #fee2e2; color: #b91c1c; }
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #0f172a;
+    --surface:  #1e293b;
+    --border:   #334155;
+    --text:     #e2e8f0;
+    --text-muted: #94a3b8;
+  }
+  .form-input, .form-textarea { background: #0f172a; color: var(--text); }
+  .card { background: var(--surface); }
+}
