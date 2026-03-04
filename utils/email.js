@@ -21,9 +21,9 @@
 //   200 emails/month — plenty for daily job application reports
 // ═══════════════════════════════════════════════════════════════════════════════
 
-if (typeof window.EmailUtils === 'undefined') {
+if (typeof self.EmailUtils === 'undefined') {
 
-  window.EmailUtils = {
+  self.EmailUtils = {
 
     // ─── EMAILJS API ENDPOINT ──────────────────────────────────────────────
     // This is EmailJS's REST API URL. We call it with a POST request.
@@ -257,6 +257,6 @@ Applications: ${logEntries.filter(e => e.status === 'applied').map(e =>
         .replace(/'/g,  '&#x27;');
     },
 
-  }; // end window.EmailUtils
+  }; // end self.EmailUtils
 
 } // end namespace guard

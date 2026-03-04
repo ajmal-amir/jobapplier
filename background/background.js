@@ -21,10 +21,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── Import utilities ─────────────────────────────────────────────────────────
-// In a background service worker (type: "module"), we CAN use ES6 imports.
-// This is different from content scripts which use a shared global scope.
-import { StorageUtils } from '../utils/storage.js';
-import { EmailUtils }   from '../utils/email.js';
+// Load utility scripts into the service worker global scope.
+importScripts('../utils/storage.js');
+importScripts('../utils/email.js');
+const StorageUtils = self.StorageUtils;
+const EmailUtils   = self.EmailUtils;
 
 // ─── APPLICATION STATE ───────────────────────────────────────────────────────
 // Service workers can be stopped and restarted, so any variables here are

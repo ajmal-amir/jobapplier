@@ -19,12 +19,12 @@
 // Since content scripts share a global scope (all loaded files can see each
 // other's variables), we wrap everything in a check to avoid re-declaring
 // if this file gets loaded twice.
-if (typeof window.StorageUtils === 'undefined') {
+if (typeof self.StorageUtils === 'undefined') {
 
   // ─── StorageUtils OBJECT ──────────────────────────────────────────────────
   // We define all our functions as properties of one object.
   // This prevents "polluting" the global scope with dozens of function names.
-  window.StorageUtils = {
+  self.StorageUtils = {
 
     // ─── KEY CONSTANTS ──────────────────────────────────────────────────────
     // Centralizing key names as constants prevents typos. If you mistype a
@@ -238,6 +238,6 @@ if (typeof window.StorageUtils === 'undefined') {
       return daily.count;
     },
 
-  }; // end window.StorageUtils
+  }; // end self.StorageUtils
 
 } // end namespace guard
