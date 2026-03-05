@@ -411,10 +411,28 @@
   // HANDLE EXTERNAL APPLICATION (Non-Easy-Apply Jobs)
   // ═══════════════════════════════════════════════════════════════════════════
   async function handleExternalApplication(jobDetails, jobUrl, matchResult) {
-    // Find the external "Apply" button on the LinkedIn job card
+    // Bundle the job context so the form-filler on the external page has context
+    const jobContext = {
+      jobTitle:    jobDetails.title,
+      company:     jobDetails.company,
+      description: jobDetails.description,
+      matchScore:  matchResult.score,
+    };
+
+    // Try to find the external URL directly from an anchor tag first
+    // (LinkedIn sometimes renders the apply button as <a href="..."> for external jobs)
+    const applyLink = document.querySelector(
+      'a.jobs-apply-button[href], ' +
+      'a[data-tracking-control-name*="apply"][href]'
+    );
+    if (applyLink?.href) {
+      await sendMessage('OPEN_JOB_TAB', { url: applyLink.href, jobContext });
+      return { status: 'applied', notes: `Opened external form: ${applyLink.href}` };
+    }
+
+    // Fallback: find the apply button element
     const applyBtn = document.querySelector(
-      'button.jobs-apply-button:not(.jobs-apply-button--top-card), ' +
-      'a[href*="apply"], ' +
+      'button.jobs-apply-button, ' +
       'button[data-control-name="jobdetails_topcard_inapply"]'
     );
 
@@ -422,26 +440,21 @@
       return { status: 'failed', notes: 'External apply button not found' };
     }
 
-    // Get the external URL before clicking (links open in new tab)
-    const externalUrl = applyBtn.href || null;
-
-    if (externalUrl) {
-      // Open the external form in a new tab
-      // The generic form-filler.js content script will handle filling it
-      await sendMessage('OPEN_JOB_TAB', { url: externalUrl });
-      return {
-        status: 'applied',
-        notes: `Opened external application form: ${externalUrl}. Form filler will activate on that tab.`
-      };
-    } else {
-      // Button click will open in same tab or new tab depending on LinkedIn's implementation
-      applyBtn.click();
-      await sleep(2000);
-      return {
-        status: 'applied',
-        notes: 'External application opened — please complete and submit manually if form-filler cannot'
-      };
+    // Some buttons carry the URL in a data attribute
+    const dataUrl = applyBtn.dataset.jobApplyUrl || applyBtn.dataset.applyUrl || null;
+    if (dataUrl) {
+      await sendMessage('OPEN_JOB_TAB', { url: dataUrl, jobContext });
+      return { status: 'applied', notes: `Opened external form: ${dataUrl}` };
     }
+
+    // Last resort: click the button and hope the browser opens the new tab.
+    // The background tab-creation listener will attempt to fill the form.
+    applyBtn.click();
+    await sleep(2000);
+    return {
+      status: 'applied',
+      notes: 'External application opened via button click — form filler will attempt to activate',
+    };
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -470,22 +483,21 @@
   // ── isEasyApplyJob() ─────────────────────────────────────────────────────
   // Returns true if the current job has LinkedIn Easy Apply (not external)
   function isEasyApplyJob() {
-    // Easy Apply button has specific class/aria-label
-    const easyApplyBtn = document.querySelector(
-      '.jobs-apply-button[aria-label*="Easy Apply"], ' +
-      'button.jobs-apply-button .artdeco-button__text'
-    );
-
-    if (easyApplyBtn) {
-      const text = easyApplyBtn.innerText?.toLowerCase() || '';
-      return text.includes('easy apply');
+    // Check the main apply button's text — Easy Apply says "Easy Apply",
+    // external apply buttons say "Apply" with no "Easy" prefix.
+    const applyBtn = document.querySelector('button.jobs-apply-button');
+    if (applyBtn) {
+      const text = applyBtn.innerText?.toLowerCase() || '';
+      if (text.includes('easy apply')) return true;
     }
 
-    // Check if there's an "Easy Apply" badge on the job card
+    // Fallback: aria-label on the button
+    const ariaBtn = document.querySelector('button[aria-label*="Easy Apply"]');
+    if (ariaBtn) return true;
+
+    // Fallback: Easy Apply badge on job card
     const badge = document.querySelector('.job-card-container__apply-method');
-    if (badge) {
-      return badge.innerText?.toLowerCase().includes('easy apply') || false;
-    }
+    if (badge?.innerText?.toLowerCase().includes('easy apply')) return true;
 
     return false;
   }

@@ -580,3 +580,46 @@ if (typeof window.FormFiller === 'undefined') {
   }; // end window.FormFiller
 
 } // end namespace guard
+
+// ── FILL_EXTERNAL_FORM message listener ──────────────────────────────────────
+// The background script sends this when it opens an external job application
+// tab via OPEN_JOB_TAB.  We load config from storage and trigger fillForm().
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action !== 'FILL_EXTERNAL_FORM') return;
+
+  (async () => {
+    try {
+      // Ask the background for the full configuration (profile, resume, API key)
+      const config = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: 'GET_CONFIG' }, resolve);
+      });
+
+      if (!config || !config.success) {
+        sendResponse({ success: false, error: 'Could not load config from background' });
+        return;
+      }
+
+      const fillConfig = {
+        profile:        config.profile,
+        resume:         config.resume,
+        apiKey:         config.apiKey,
+        jobTitle:       message.data?.jobTitle    || '',
+        company:        message.data?.company     || '',
+        jobDescription: message.data?.description || '',
+      };
+
+      const autoSubmit = config.settings?.autoSubmit || false;
+
+      // Give dynamic page content a moment to render before scanning fields
+      await new Promise(r => setTimeout(r, 500));
+
+      const results = await window.FormFiller.fillForm(fillConfig, autoSubmit);
+      sendResponse({ success: true, results });
+    } catch (err) {
+      console.error('[AI Job Applicant] FILL_EXTERNAL_FORM error:', err.message);
+      sendResponse({ success: false, error: err.message });
+    }
+  })();
+
+  return true; // Keep the message channel open for the async response
+});

@@ -291,14 +291,33 @@ async function handleMessage(message, sender, sendResponse) {
         break;
 
       // ── Open Job URL in New Tab ───────────────────────────────────────────
-      case 'OPEN_JOB_TAB':
-        // Content script requests that background open a URL in a new tab
+      case 'OPEN_JOB_TAB': {
         const newTab = await chrome.tabs.create({
           url:    message.data.url,
-          active: false // Open in background — don't steal focus from user
+          active: false,
         });
+
+        // Once the tab finishes loading, tell the form-filler content script
+        // to activate with the job context passed from linkedin.js.
+        const jobContext = message.data.jobContext || {};
+        const tabListener = (tabId, changeInfo) => {
+          if (tabId !== newTab.id || changeInfo.status !== 'complete') return;
+          chrome.tabs.onUpdated.removeListener(tabListener);
+          // Small delay so the page's own JS can finish initialising
+          setTimeout(() => {
+            chrome.tabs.sendMessage(newTab.id, {
+              action: 'FILL_EXTERNAL_FORM',
+              data:   jobContext,
+            }).catch(() => {
+              console.log('[AI Job Applicant] form-filler not reachable on external tab');
+            });
+          }, 1500);
+        };
+        chrome.tabs.onUpdated.addListener(tabListener);
+
         response = { success: true, tabId: newTab.id };
         break;
+      }
 
       // ── Unknown Action ────────────────────────────────────────────────────
       default:
