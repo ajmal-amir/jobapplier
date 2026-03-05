@@ -441,4 +441,13 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   }
 });
 
+// ─── SETTINGS CHANGE HANDLER ──────────────────────────────────────────────────
+// Re-create the daily email alarm whenever the user saves app settings so that
+// changes to sendDailyEmail or emailTime take effect immediately.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && (changes.appSettings || changes.emailConfig)) {
+    setupDailyEmailAlarm();
+  }
+});
+
 console.log('[AI Job Applicant] Background service worker started');
