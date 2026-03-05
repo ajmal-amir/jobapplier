@@ -236,9 +236,13 @@ Applications: ${logEntries.filter(e => e.status === 'applied').map(e =>
       `.trim();
 
       return this.sendEmail(emailConfig, {
-        subject:   `Applied: ${jobRecord.jobTitle} at ${jobRecord.company}`,
-        html_body: htmlBody,
-        plain_body: `Applied to ${jobRecord.jobTitle} at ${jobRecord.company}. Match: ${jobRecord.matchScore}%`,
+        subject:      `Applied: ${jobRecord.jobTitle} at ${jobRecord.company}`,
+        job_title:    jobRecord.jobTitle    || '',
+        company_name: jobRecord.company     || '',
+        location:     jobRecord.location    || '',
+        match_score:  jobRecord.matchScore  ?? '',
+        source:       jobRecord.source      || '',
+        job_url:      jobRecord.url         || '',
       });
     },
 
