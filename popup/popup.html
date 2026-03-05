@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+  FILE: popup/popup.html
+  PURPOSE: The small popup window that appears when you click the extension icon.
+
+  EXTENSION POPUP RULES:
+  - Max size is typically 800x600px (Chrome limits it)
+  - Must load fast — users click expecting instant response
+  - No inline JavaScript allowed (Content Security Policy bans it)
+    → All JS must be in external files (popup.js)
+  - No inline styles in <script> tags (CSP bans that too)
+    → All styles in external files (popup.css)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport meta tag controls zoom on mobile (extensions can open in panels) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Job Applicant</title>
+  <!-- External CSS file — CSP requires this instead of inline <style> -->
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-left">
+      <!-- Extension icon (32x32 version for header) -->
+      <img src="../icons/icon48.png" alt="Logo" class="header-logo">
+      <div>
+        <h1 class="header-title">AI Job Applicant</h1>
+        <p class="header-subtitle">Powered by OpenAI GPT-4o</p>
+      </div>
+    </div>
+    <!-- Settings gear icon → opens Options page -->
+    <button id="btnSettings" class="btn-icon" title="Open Settings">⚙️</button>
+  </header>
+
+  <!-- ── STATUS INDICATOR ─────────────────────────────────────────────────── -->
+  <!-- This shows the current state of the automation in a colored badge -->
+  <div class="status-bar">
+    <!-- The status-dot changes color via CSS classes: .running, .paused, .stopped -->
+    <span id="statusDot" class="status-dot stopped"></span>
+    <span id="statusText" class="status-text">Stopped</span>
+    <!-- Right side: daily count and limit -->
+    <span id="dailyCounter" class="daily-counter">0 / 30 today</span>
+  </div>
+
+  <!-- ── WARNING BANNER ──────────────────────────────────────────────────── -->
+  <!-- Shown when setup is incomplete (no API key, no resume, etc.) -->
+  <div id="warningBanner" class="warning-banner hidden">
+    <span class="warning-icon">⚠️</span>
+    <span id="warningText">Setup incomplete — click Settings</span>
+  </div>
+
+  <!-- ── STATISTICS GRID ──────────────────────────────────────────────────── -->
+  <!-- Four stat boxes showing session performance at a glance -->
+  <div class="stats-grid">
+    <!-- Each stat card has a number (big, bold) and a label below it -->
+    <div class="stat-card">
+      <span id="statApplied" class="stat-number">0</span>
+      <span class="stat-label">Applied</span>
+    </div>
+    <div class="stat-card">
+      <span id="statSkipped" class="stat-number">0</span>
+      <span class="stat-label">Skipped</span>
+    </div>
+    <div class="stat-card">
+      <span id="statFailed" class="stat-number">0</span>
+      <span class="stat-label">Failed</span>
+    </div>
+    <div class="stat-card">
+      <span id="statScanned" class="stat-number">0</span>
+      <span class="stat-label">Scanned</span>
+    </div>
+  </div>
+
+  <!-- ── CONTROL BUTTONS ─────────────────────────────────────────────────── -->
+  <!-- Three big buttons: Start, Pause/Resume, Stop -->
+  <div class="controls">
+    <!-- Start button — green, prominent -->
+    <button id="btnStart" class="btn btn-start">
+      ▶ Start
+    </button>
+    <!-- Pause/Resume — yellow, only active when running -->
+    <button id="btnPause" class="btn btn-pause" disabled>
+      ⏸ Pause
+    </button>
+    <!-- Stop — red, only active when running or paused -->
+    <button id="btnStop" class="btn btn-stop" disabled>
+      ⏹ Stop
+    </button>
+  </div>
+
+  <!-- ── PLATFORM CHECKBOXES ─────────────────────────────────────────────── -->
+  <!-- Quick toggles for which job platforms to scan -->
+  <div class="platform-section">
+    <p class="section-label">Scan on:</p>
+    <label class="checkbox-label">
+      <!-- data-platform attribute lets JS identify which platform this is -->
+      <input type="checkbox" id="chkLinkedIn" data-platform="linkedin" checked>
+      <span class="platform-icon">💼</span> LinkedIn
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="chkIndeed" data-platform="indeed" checked>
+      <span class="platform-icon">🔍</span> Indeed
+    </label>
+  </div>
+
+  <!-- ── RECENT ACTIVITY LOG ─────────────────────────────────────────────── -->
+  <!-- Scrollable list of the most recent job actions -->
+  <div class="log-section">
+    <div class="log-header">
+      <span class="section-label">Recent Activity</span>
+      <!-- View all logs link → opens the full options/log page -->
+      <button id="btnViewLog" class="btn-link">View all →</button>
+    </div>
+    <!-- Log entries are added dynamically by popup.js -->
+    <div id="activityLog" class="activity-log">
+      <!-- Each entry looks like: <div class="log-entry status-applied">...</div> -->
+      <p class="log-empty">No recent activity. Start the automation to begin!</p>
+    </div>
+  </div>
+
+  <!-- ── NAVIGATION BUTTONS ─────────────────────────────────────────────── -->
+  <!-- Quick links to useful pages -->
+  <div class="nav-row">
+    <!-- Opens LinkedIn job search in a new tab -->
+    <button id="btnLinkedIn" class="btn-nav">
+      Open LinkedIn Jobs
+    </button>
+    <!-- Opens Indeed job search in a new tab -->
+    <button id="btnIndeed" class="btn-nav">
+      Open Indeed
+    </button>
+  </div>
+
+  <!-- ── VERSION FOOTER ──────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <span>v1.0.0</span>
+    <span>·</span>
+    <!-- Shows whether the extension is ready (green dot) or needs setup (red dot) -->
+    <span id="configStatus">Checking config...</span>
+  </footer>
+
+  <!-- External JS — loaded LAST so all HTML elements exist when JS runs -->
+  <!-- (In popup context, DOMContentLoaded fires before this script executes) -->
+  <script src="popup.js"></script>
+
+</body>
+</html>
