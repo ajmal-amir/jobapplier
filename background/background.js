@@ -297,27 +297,42 @@ async function handleMessage(message, sender, sendResponse) {
           active: false,
         });
 
-        // Once the tab finishes loading, tell the form-filler content script
-        // to activate with the job context passed from linkedin.js.
         const jobContext = message.data.jobContext || {};
+
+        // Store context so form-filler.js can pick it up via storage even if
+        // the direct message arrives before the content script is ready.
+        await chrome.storage.local.set({
+          [`pending_fill_${newTab.id}`]: { jobContext, timestamp: Date.now() }
+        });
+
+        // Also attempt direct message delivery with retries to handle
+        // slow-loading SPAs (Greenhouse, Lever, Workday, etc.).
         const tabListener = (tabId, changeInfo) => {
           if (tabId !== newTab.id || changeInfo.status !== 'complete') return;
           chrome.tabs.onUpdated.removeListener(tabListener);
-          // Small delay so the page's own JS can finish initialising
-          setTimeout(() => {
-            chrome.tabs.sendMessage(newTab.id, {
-              action: 'FILL_EXTERNAL_FORM',
-              data:   jobContext,
-            }).catch(() => {
-              console.log('[AI Job Applicant] form-filler not reachable on external tab');
-            });
-          }, 1500);
+          let attempt = 0;
+          const tryFill = () => {
+            if (attempt >= 4) return;
+            attempt++;
+            setTimeout(() => {
+              chrome.tabs.sendMessage(newTab.id, {
+                action: 'FILL_EXTERNAL_FORM',
+                data:   jobContext,
+              }).catch(() => tryFill()); // retry if content script not ready yet
+            }, attempt * 1500); // 1.5s, 3s, 4.5s, 6s
+          };
+          tryFill();
         };
         chrome.tabs.onUpdated.addListener(tabListener);
 
         response = { success: true, tabId: newTab.id };
         break;
       }
+
+      // ── Return the sender's tab ID (used by form-filler for storage lookup) ─
+      case 'GET_TAB_ID':
+        response = { tabId: sender.tab?.id };
+        break;
 
       // ── Unknown Action ────────────────────────────────────────────────────
       default:

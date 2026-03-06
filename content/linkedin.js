@@ -229,7 +229,9 @@
     // ── Skip if Easy Apply is not available and external is disabled ─────────
     if (!isEasyApply && !config.settings.enableExternalForms) {
       await logApplication({
-        ...jobDetails,
+        jobTitle:  jobDetails.title,
+        company:   jobDetails.company,
+        location:  jobDetails.location,
         url:       jobUrl,
         source:    'LinkedIn',
         applyType: 'External',
@@ -256,7 +258,9 @@
     if (matchResult.score < config.preferences.matchThreshold) {
       console.log(`[LinkedIn] Skipping — match score too low (${matchResult.score}%)`);
       await logApplication({
-        ...jobDetails,
+        jobTitle:  jobDetails.title,
+        company:   jobDetails.company,
+        location:  jobDetails.location,
         url:       jobUrl,
         source:    'LinkedIn',
         applyType: isEasyApply ? 'EasyApply' : 'External',
@@ -278,7 +282,9 @@
 
     // ── Log the result ───────────────────────────────────────────────────────
     await logApplication({
-      ...jobDetails,
+      jobTitle:  jobDetails.title,
+      company:   jobDetails.company,
+      location:  jobDetails.location,
       url:       jobUrl,
       source:    'LinkedIn',
       applyType: isEasyApply ? 'EasyApply' : 'External',

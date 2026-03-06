@@ -581,45 +581,95 @@ if (typeof window.FormFiller === 'undefined') {
 
 } // end namespace guard
 
+// ── EXTERNAL FORM FILL HELPERS ────────────────────────────────────────────────
+// Guard so we never fill the same page twice (message retries can cause this).
+let _externalFillStarted = false;
+
+async function _runExternalFill(jobData) {
+  if (_externalFillStarted) return { alreadyStarted: true };
+  _externalFillStarted = true;
+
+  // Clear the storage entry so retries from background don't re-trigger
+  const tabResp = await new Promise(r => chrome.runtime.sendMessage({ action: 'GET_TAB_ID' }, r));
+  if (tabResp?.tabId) {
+    chrome.storage.local.remove(`pending_fill_${tabResp.tabId}`);
+  }
+
+  const config = await new Promise(r => chrome.runtime.sendMessage({ action: 'GET_CONFIG' }, r));
+  if (!config?.success) throw new Error('Could not load config');
+
+  const fillConfig = {
+    profile:        config.profile,
+    resume:         config.resume,
+    apiKey:         config.apiKey,
+    jobTitle:       jobData.jobTitle    || '',
+    company:        jobData.company     || '',
+    jobDescription: jobData.description || '',
+  };
+
+  // Wait for SPA/ATS pages to finish rendering their form fields
+  await new Promise(r => setTimeout(r, 2000));
+
+  const results = await window.FormFiller.fillForm(fillConfig, config.settings?.autoSubmit || false);
+
+  // Log the application so it appears in the popup and email report
+  chrome.runtime.sendMessage({
+    action: 'LOG_APPLICATION',
+    data: {
+      jobTitle:   jobData.jobTitle  || 'Unknown',
+      company:    jobData.company   || 'Unknown',
+      location:   jobData.location  || '',
+      url:        window.location.href,
+      source:     'External',
+      applyType:  'External',
+      status:     results.filled > 0 ? 'applied' : 'failed',
+      matchScore: jobData.matchScore || 0,
+      notes:      `Filled ${results.filled} fields, skipped ${results.skipped}`,
+    }
+  });
+
+  return results;
+}
+
 // ── FILL_EXTERNAL_FORM message listener ──────────────────────────────────────
 // The background script sends this when it opens an external job application
-// tab via OPEN_JOB_TAB.  We load config from storage and trigger fillForm().
+// tab via OPEN_JOB_TAB.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action !== 'FILL_EXTERNAL_FORM') return;
 
-  (async () => {
-    try {
-      // Ask the background for the full configuration (profile, resume, API key)
-      const config = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: 'GET_CONFIG' }, resolve);
-      });
-
-      if (!config || !config.success) {
-        sendResponse({ success: false, error: 'Could not load config from background' });
-        return;
-      }
-
-      const fillConfig = {
-        profile:        config.profile,
-        resume:         config.resume,
-        apiKey:         config.apiKey,
-        jobTitle:       message.data?.jobTitle    || '',
-        company:        message.data?.company     || '',
-        jobDescription: message.data?.description || '',
-      };
-
-      const autoSubmit = config.settings?.autoSubmit || false;
-
-      // Give dynamic page content a moment to render before scanning fields
-      await new Promise(r => setTimeout(r, 500));
-
-      const results = await window.FormFiller.fillForm(fillConfig, autoSubmit);
-      sendResponse({ success: true, results });
-    } catch (err) {
-      console.error('[AI Job Applicant] FILL_EXTERNAL_FORM error:', err.message);
-      sendResponse({ success: false, error: err.message });
-    }
-  })();
+  _runExternalFill(message.data || {})
+    .then(results  => sendResponse({ success: true, results }))
+    .catch(err     => sendResponse({ success: false, error: err.message }));
 
   return true; // Keep the message channel open for the async response
 });
+
+// ── STORAGE-BASED AUTO-INIT ───────────────────────────────────────────────────
+// Fallback for when the FILL_EXTERNAL_FORM message arrives before this content
+// script was ready. On load, check if background stored a pending fill for us.
+(async () => {
+  // Don't run on LinkedIn/Indeed — those have their own dedicated scripts
+  if (window.location.href.includes('linkedin.com') ||
+      window.location.href.includes('indeed.com')) return;
+
+  try {
+    const tabResp = await new Promise(r => chrome.runtime.sendMessage({ action: 'GET_TAB_ID' }, r));
+    const tabId   = tabResp?.tabId;
+    if (!tabId) return;
+
+    const key     = `pending_fill_${tabId}`;
+    const stored  = await chrome.storage.local.get(key);
+    const pending = stored[key];
+    if (!pending) return;
+
+    // Ignore stale entries (older than 5 minutes)
+    if (Date.now() - pending.timestamp > 5 * 60 * 1000) {
+      chrome.storage.local.remove(key);
+      return;
+    }
+
+    await _runExternalFill(pending.jobContext || {});
+  } catch (err) {
+    console.error('[AI Job Applicant] Storage-based auto-fill error:', err.message);
+  }
+})();
